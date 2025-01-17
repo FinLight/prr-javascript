@@ -98,22 +98,48 @@ export default class RandomCashFlow {
                 break;
 
             case CashFlowType.OUTFLOW_INFLOW: {
-                const firstPartCount = 1 + Math.floor(Math.random() * (settings.count - 1)); // At least 1 interval
-                const secondPartCount = settings.count - firstPartCount; // Remaining intervals (at least 1)
-                const firstPart = RandomCashFlow.#getAllNegativeCashFlows({ ...settings, count: firstPartCount }, this.precision);
-                const secondPart = RandomCashFlow.#getAllPositiveCashFlows({ ...settings, count: secondPartCount }, this.precision);
-                this.cashFlows = [...firstPart, ...secondPart];
-                break;
+                let isOutflowInflow = false;
+                while(!isOutflowInflow && iteration < MAX_ITERATIONS) {
+                    iteration++;
+                    const firstPartCount = 1 + Math.floor(Math.random() * (settings.count - 1)); // At least 1 interval
+                    const secondPartCount = settings.count - firstPartCount; // Remaining intervals (at least 1)
+                    const firstPart = RandomCashFlow.#getAllNegativeCashFlows({
+                        ...settings,
+                        count: firstPartCount
+                    }, this.precision);
+                    const secondPart = RandomCashFlow.#getAllPositiveCashFlows({
+                        ...settings,
+                        count: secondPartCount
+                    }, this.precision);
+                    this.cashFlows = [...firstPart, ...secondPart];
+                    this.adjustCashFlows(settings.cashFlowTarget);
+                    const analysis = analyzeCashFlows(this.cashFlows);
+                    isOutflowInflow = CashFlowType.INFLOW_OUTFLOW === analysis.cashFlowType;
+                }
             }
+            break;
 
             case CashFlowType.INFLOW_OUTFLOW: {
-                const firstPartCount = 1 + Math.floor(Math.random() * (settings.count - 1)); // At least 1 interval
-                const secondPartCount = settings.count - firstPartCount; // Remaining intervals (at least 1)
-                const firstPart = RandomCashFlow.#getAllPositiveCashFlows({ ...settings, count: firstPartCount }, this.precision);
-                const secondPart = RandomCashFlow.#getAllNegativeCashFlows({ ...settings, count: secondPartCount }, this.precision);
-                this.cashFlows = [...firstPart, ...secondPart];
-                break;
+                let isInflowOutflow = false;
+                while(!isInflowOutflow && iteration < MAX_ITERATIONS) {
+                    iteration++;
+                    const firstPartCount = 1 + Math.floor(Math.random() * (settings.count - 1)); // At least 1 interval
+                    const secondPartCount = settings.count - firstPartCount; // Remaining intervals (at least 1)
+                    const firstPart = RandomCashFlow.#getAllPositiveCashFlows({
+                        ...settings,
+                        count: firstPartCount
+                    }, this.precision);
+                    const secondPart = RandomCashFlow.#getAllNegativeCashFlows({
+                        ...settings,
+                        count: secondPartCount
+                    }, this.precision);
+                    this.cashFlows = [...firstPart, ...secondPart];
+                    this.adjustCashFlows(settings.cashFlowTarget);
+                    const analysis = analyzeCashFlows(this.cashFlows);
+                    isInflowOutflow = CashFlowType.INFLOW_OUTFLOW === analysis.cashFlowType;
+                }
             }
+            break;
 
             case CashFlowType.ZIGZAG: {
                 let isZigZag = false;
@@ -127,8 +153,8 @@ export default class RandomCashFlow {
                 if (!isZigZag) {
                     throw new Error(`Unable to generate a ZigZag pattern after ${MAX_ITERATIONS} attempts.`);
                 }
-                break;
             }
+            break;
 
             default:
                 throw new Error(`Unsupported CashFlowType: ${cashFlowType}`);
@@ -136,7 +162,7 @@ export default class RandomCashFlow {
         return this;
     }
 
-    adjustCashFlows(target = CashFlowTarget.ZERO, adjustment = 1) {
+    adjustCashFlows(target = CashFlowTarget.ZERO, adjustment = RandomCashFlow.#generateRandomAmount(100,999)) {
         if (adjustment === 0) {
             throw new Error('Adjustment cannot tbe zero');
         }

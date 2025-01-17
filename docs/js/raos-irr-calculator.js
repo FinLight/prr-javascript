@@ -1,7 +1,7 @@
 import {analyzeCashFlows, CashFlowType, getNFV, getNPV} from "./cash-flows.js";
 
 export default class RaosIrrCalculator {
-    static calculate(cashFlows, guess = 0, tolerance = 1e-6, maxIter = 100) {
+    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 100) {
         const cashFlowResult = analyzeCashFlows(cashFlows);
         if (CashFlowType.NET_ZERO === cashFlowResult.cashFlowType) {
             return 0

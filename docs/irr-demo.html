@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
         import RandomCashFlow, { CashFlowTarget } from './js/random-cash-flow.js';
-        import { CashFlowType, getNPV, getNFV } from './js/cash-flows.js';
+        import {CashFlowType, getNPV, getNFV, analyzeCashFlows} from './js/cash-flows.js';
         import { analyzeIRRs } from './js/irr-analyzer.js';
 
         $(document).ready(function () {
@@ -52,7 +52,7 @@
                 } else {
                     cashFlowTarget = CashFlowTarget.ZERO;
                 }
-
+                options.cashFlowTarget = cashFlowTarget
                 try {
                     randomCashFlow.generateRandomCashFlowsByCashFlowType(CashFlowType[cashFlowType], options);
                     const cashFlows = randomCashFlow.getCashFlows();
@@ -74,6 +74,9 @@
                     alert("Invalid cash flows. Please enter valid numeric values.");
                     return;
                 }
+                const cashflowAnalysis = analyzeCashFlows(cashFlows)
+                $('#cashFlowTypeInfo').html(`Cash Flow Type: ${cashflowAnalysis.cashFlowType}`)
+                $('#netCashFlowInfo').html(`Net Cash Flow: ${cashflowAnalysis.netCashFlow}`)
 
                 const results = analyzeIRRs(cashFlows);
                 const tableBody = document.querySelector('#comparisonTable tbody');
@@ -280,6 +283,8 @@
 
 <section>
     <button id="analyzeButton">Analyze IRR</button>
+    <p id="cashFlowTypeInfo"></p>
+    <p id="netCashFlowInfo"></p>
     <h3>IRR Comparison &darr;</h3>
     <table id="comparisonTable" border="1" style="width: 70%; border-collapse: collapse;">
         <thead>
