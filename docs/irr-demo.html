@@ -61,6 +61,7 @@
                     console.error(error);
                     alert("Error generating cash flows: " + error.message);
                 }
+                $("#analyzeButton").click();
             });
 
             // Analyze IRR and Display NFV/NPV Graph
@@ -238,10 +239,11 @@
     </style>
 </head>
 <body>
-<h1>Cash Flow Generator and IRR Analysis</h1>
+<h1>IRR - Rao's Method</h1>
+<h4>(Comparison with other methods)</h4>
 
 <section>
-    <h2>Generate Random Cash Flows</h2>
+    <strong>Generate cash flows or Enter your own</strong>
     <div class="inline-container">
         <div>
             <label for="cashFlowType">Cash Flow Type:</label>
@@ -275,10 +277,8 @@
 </section>
 
 <section>
-    <h2>Analyze IRR</h2>
     <button id="analyzeButton">Analyze IRR</button>
-
-    <h3>IRR Comparison</h3>
+    <h3>IRR Comparison &darr;</h3>
     <table id="comparisonTable" border="1" style="width: 70%; border-collapse: collapse;">
         <thead>
         <tr>
@@ -294,7 +294,8 @@
 </section>
 
 <section>
-    <h2>NFV and NPV Chart</h2>
+    <h2>NFV and NPV Chart &darr;</h2>
+    <span>Better view in wide screen</span>
     <div class="inline-container">
         <div>
             <label for="lowerBoundary">Lower Boundary (%):</label>
@@ -320,7 +321,7 @@
             </label>
         </div>
     </div>
-    <canvas id="nfvNpvChart" height="100"></canvas>
+    <canvas id="nfvNpvChart"></canvas>
 </section>
 </body>
 </html>
