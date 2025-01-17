@@ -1,5 +1,5 @@
-import RandomCashFlow, { CashFlowTarget } from "../public/js/random-cash-flow.js";
-import { analyzeCashFlows, CashFlowType } from '../public/js/cash-flows.js';
+import RandomCashFlow, { CashFlowTarget } from "../docs/js/random-cash-flow.js";
+import { analyzeCashFlows, CashFlowType } from '../docs/js/cash-flows.js';
 
 describe('RandomCashFlow', () => {
     let instance;

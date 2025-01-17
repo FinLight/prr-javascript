@@ -1,6 +1,6 @@
-import { analyzeCashFlows, analyzeIRRs, getNFV, getNPV, CashFlowType } from "../public/js/cash-flows.js";
-import IRRCalculatorNR from '../public/js/other-irr-calculators.js';
-import RaosIrrCalculator from '../public/js/raos-irr-calculator.js';
+import { analyzeCashFlows, analyzeIRRs, getNFV, getNPV, CashFlowType } from "../docs/js/cash-flows.js";
+import IRRCalculatorNR from '../docs/js/other-irr-calculators.js';
+import RaosIrrCalculator from '../docs/js/raos-irr-calculator.js';
 
 jest.mock('../public/js/OtherIrrCalculators.js');
 jest.mock('../public/js/raos-irr-calculator.js');
