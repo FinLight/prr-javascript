@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Flow and IRR Analysis</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import RandomCashFlow, { CashFlowTarget } from './js/random-cash-flow.js';
+        import { CashFlowType, getNPV, getNFV } from './js/cash-flows.js';
+        import { analyzeIRRs } from './js/irr-analyzer.js';
+
+        $(document).ready(function () {
+            const randomCashFlow = new RandomCashFlow(2);
+            let currentRaosIrr = 0;
+
+            // Handle Cash Flow Type change
+            $("#cashFlowType").change(function () {
+                const cashFlowType = $(this).val();
+                const isDisabled = ["NET_ZERO", "ALL_INFLOW", "ALL_OUTFLOW"].includes(cashFlowType);
+
+                $("#netCashFlow").prop("disabled", isDisabled);
+
+                if (isDisabled) {
+                    $("#netCashFlow").val("Positive");
+                }
+            });
+
+            // Generate Random Cash Flows
+            $("#generateCashFlows").click(function () {
+                const cashFlowType = $("#cashFlowType").val();
+                const netCashFlow = $("#netCashFlow").val();
+                const numberOfIntervals = parseInt($("#numberOfIntervals").val(), 10);
+
+                if (numberOfIntervals < 2 || numberOfIntervals > 10000) {
+                    alert("Number of intervals must be between 2 and 10,000.");
+                    return;
+                }
+
+                const options = {
+                    count: numberOfIntervals,
+                    minAmount: -100,
+                    maxAmount: 100
+                };
+
+                let cashFlowTarget;
+                if (netCashFlow === "Positive") {
+                    cashFlowTarget = CashFlowTarget.POSITIVE;
+                } else if (netCashFlow === "Negative") {
+                    cashFlowTarget = CashFlowTarget.NEGATIVE;
+                } else {
+                    cashFlowTarget = CashFlowTarget.ZERO;
+                }
+
+                try {
+                    randomCashFlow.generateRandomCashFlowsByCashFlowType(CashFlowType[cashFlowType], options);
+                    const cashFlows = randomCashFlow.getCashFlows();
+                    $("#cashFlowsOutput").val(cashFlows.join(", "));
+                } catch (error) {
+                    console.error(error);
+                    alert("Error generating cash flows: " + error.message);
+                }
+            });
+
+            // Analyze IRR and Display NFV/NPV Graph
+            $("#analyzeButton").click(function () {
+                const cashFlows = $("#cashFlowsOutput").val()
+                    .split(",")
+                    .map(value => parseFloat(value.trim()));
+
+                if (cashFlows.some(isNaN)) {
+                    alert("Invalid cash flows. Please enter valid numeric values.");
+                    return;
+                }
+
+                const results = analyzeIRRs(cashFlows);
+                const tableBody = document.querySelector('#comparisonTable tbody');
+                tableBody.innerHTML = ''; // Clear previous results
+
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                    <td>${result.method}</td>
+                    <td>${typeof result.irr === 'number' ? result.irr.toFixed(2) : result.irr}</td>
+                    <td>${result.timeTaken.toFixed(2)}</td>
+                    <td>${result.irrNFV !== null ? result.irrNFV.toFixed(2) : 'N/A'}</td>
+                    <td>${result.irrNPV !== null ? result.irrNPV.toFixed(2) : 'N/A'}</td>
+                    `;
+
+                    if (result.method === 'Rao\'s Method') {
+                        currentRaosIrr = result.irr;
+                    }
+
+                    tableBody.appendChild(row);
+                });
+
+                if (typeof currentRaosIrr === 'number') {
+                    updateGraphControls(currentRaosIrr);
+                }
+            });
+
+            // Update Graph Controls
+            function updateGraphControls(raosIrr) {
+                $("#lowerBoundary").val((raosIrr - 10).toFixed(2));
+                $("#upperBoundary").val((raosIrr + 10).toFixed(2));
+                displayNFVNPVChart(raosIrr);
+            }
+
+            let chartInstance = null;
+
+            function displayNFVNPVChart() {
+                const lowerBoundary = parseFloat($("#lowerBoundary").val());
+                const upperBoundary = parseFloat($("#upperBoundary").val());
+                const showNFV = $("#showNFV").is(':checked');
+                const showNPV = $("#showNPV").is(':checked');
+
+                if (isNaN(lowerBoundary) || isNaN(upperBoundary)) {
+                    alert("Please enter valid boundaries.");
+                    return;
+                }
+
+                const cashFlows = $("#cashFlowsOutput").val()
+                    .split(",")
+                    .map(value => parseFloat(value.trim()));
+
+                const rates = [];
+                const nfvs = [];
+                const npvs = [];
+
+                for (let rate = lowerBoundary; rate <= upperBoundary; rate += 1) {
+                    const decimalRate = rate / 100; // Convert to decimal
+                    rates.push(rate);
+                    if (showNFV) nfvs.push(getNFV(cashFlows, decimalRate));
+                    if (showNPV) npvs.push(getNPV(cashFlows, decimalRate));
+                }
+
+                const datasets = [];
+                if (showNFV) {
+                    datasets.push({
+                        label: 'NFV',
+                        data: nfvs,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: true,
+                    });
+                }
+                if (showNPV) {
+                    datasets.push({
+                        label: 'NPV',
+                        data: npvs,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true,
+                    });
+                }
+
+                const ctx = document.getElementById('nfvNpvChart').getContext('2d');
+
+                // Destroy the existing chart instance if it exists
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                // Create a new chart instance
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: rates.map(r => r.toFixed(2)),
+                        datasets,
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'NFV and NPV vs. Rate'
+                            },
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Rate (%)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    },
+                });
+            }
+
+            // Replot graph on control change
+            $("#lowerBoundary, #upperBoundary, #showNFV, #showNPV").on('input change', function () {
+                displayNFVNPVChart();
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        textarea {
+            width: 100%;
+            margin-top: 10px;
+        }
+        input, select {
+            width: auto;
+            padding: 5px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        button {
+            display: inline-block;
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .inline-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Cash Flow Generator and IRR Analysis</h1>
+
+<section>
+    <h2>Generate Random Cash Flows</h2>
+    <div class="inline-container">
+        <div>
+            <label for="cashFlowType">Cash Flow Type:</label>
+            <select id="cashFlowType">
+                <option value="INFLOW_OUTFLOW">Inflow then Outflow</option>
+                <option value="OUTFLOW_INFLOW">Outflow then Inflow</option>
+                <option value="ZIGZAG">Zigzag</option>
+                <option value="NET_ZERO">Net Zero</option>
+                <option value="ALL_INFLOW">All Inflow</option>
+                <option value="ALL_OUTFLOW">All Outflow</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="netCashFlow">Net Cash Flow:</label>
+            <select id="netCashFlow">
+                <option value="Positive">Positive</option>
+                <option value="Negative">Negative</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="numberOfIntervals">Number of Intervals (2 to 10,000):</label>
+            <input type="number" id="numberOfIntervals" min="2" max="10000" value="10">
+        </div>
+
+        <button id="generateCashFlows">Generate Cash Flows</button>
+    </div>
+
+    <textarea id="cashFlowsOutput" placeholder="Enter cash flows here or use above-generated cash flows"></textarea>
+</section>
+
+<section>
+    <h2>Analyze IRR</h2>
+    <button id="analyzeButton">Analyze IRR</button>
+
+    <h3>IRR Comparison</h3>
+    <table id="comparisonTable" border="1" style="width: 70%; border-collapse: collapse;">
+        <thead>
+        <tr>
+            <th>Method</th>
+            <th>IRR (%)</th>
+            <th>Time Taken (ms)</th>
+            <th>NFV</th>
+            <th>NPV</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>
+
+<section>
+    <h2>NFV and NPV Chart</h2>
+    <div class="inline-container">
+        <div>
+            <label for="lowerBoundary">Lower Boundary (%):</label>
+            <input type="number" id="lowerBoundary" step="0.01">
+        </div>
+
+        <div>
+            <label for="upperBoundary">Upper Boundary (%):</label>
+            <input type="number" id="upperBoundary" step="0.01">
+        </div>
+
+        <div>
+            <label>
+                <input type="checkbox" id="showNFV" checked>
+                Show NFV
+            </label>
+        </div>
+
+        <div>
+            <label>
+                <input type="checkbox" id="showNPV" checked>
+                Show NPV
+            </label>
+        </div>
+    </div>
+    <canvas id="nfvNpvChart" height="100"></canvas>
+</section>
+</body>
+</html>
