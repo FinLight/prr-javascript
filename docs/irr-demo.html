@@ -118,7 +118,9 @@
                 const showNPV = $("#showNPV").is(':checked');
 
                 if (isNaN(lowerBoundary) || isNaN(upperBoundary)) {
-                    alert("Please enter valid boundaries.");
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
                     return;
                 }
 

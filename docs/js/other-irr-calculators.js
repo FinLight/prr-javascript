@@ -1,39 +1,50 @@
+import {getNFV, getNPV} from "./cash-flows.js";
+
 export class IRRCalculatorNR_NPV {
-    static calculate(cashFlows, guess = 0.1) {
-        const maxIterations = 1000;
-        const precision = 1e-6;
+    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 1000) {
+        let iter = 0;
         let rate = guess;
 
-        for (let i = 0; i < maxIterations; i++) {
-            const npv = cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + rate, t), 0);
-            const dNpv = cashFlows.reduce((sum, cf, t) => sum - (t * cf) / Math.pow(1 + rate, t + 1), 0);
+        while (iter < maxIter) {
+            const f = getNPV(cashFlows, rate)
+            const fPrime = cashFlows.reduce((acc, cf, t) => acc - t * cf / Math.pow(1 + rate, t + 1), 0);
 
-            const newRate = rate - npv / dNpv;
-            if (Math.abs(newRate - rate) < precision) return newRate;
+            if (Math.abs(fPrime) < tolerance) break; // Avoid division by zero
+
+            const newRate = rate - f / fPrime;
+
+            if (Math.abs(newRate - rate) < tolerance) {
+                return newRate
+            }
 
             rate = newRate;
+            iter++;
         }
-
-        return Number.NaN;
+        return rate
     }
 }
 export class IRRCalculatorNR_NFV {
-    static calculate(cashFlows, guess = 0.1) {
-        const maxIterations = 1000;
-        const precision = 1e-6;
+    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 1000) {
+        let iter = 0;
         let rate = guess;
+        const n = cashFlows.length - 1;
 
-        for (let i = 0; i < maxIterations; i++) {
-            const nfv = cashFlows.reduce((sum, cf, t) => sum + cf * Math.pow(1 + rate, t), 0);
-            const dNfv = cashFlows.reduce((sum, cf, t) => sum + (t * cf * Math.pow(1 + rate, t - 1)), 0);
+        while (iter < maxIter) {
+            const f = getNFV(cashFlows, rate)
+            const fPrime = cashFlows.reduce((acc, cf, t) => acc + (n - t) * cf * Math.pow(1 + rate, n - t - 1), 0);
 
-            const newRate = rate - nfv / dNfv;
-            if (Math.abs(newRate - rate) < precision) return newRate;
+            if (Math.abs(fPrime) < tolerance) break; // Avoid division by zero
+
+            const newRate = rate - f / fPrime;
+
+            if (Math.abs(newRate - rate) < tolerance) {
+                return newRate
+            }
 
             rate = newRate;
+            iter++;
         }
-
-        return Number.NaN;
+        return rate
     }
 }
 export class IRRCalculatorBrent {
