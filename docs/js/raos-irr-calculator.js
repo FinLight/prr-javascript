@@ -15,11 +15,13 @@ export default class RaosIrrCalculator {
             return Number.NEGATIVE_INFINITY
         }
 
-        if (CashFlowType.INFLOW_OUTFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow < 0) {
-            return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
-        } else if (CashFlowType.OUTFLOW_INFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow > 0) {
+        if (CashFlowType.OUTFLOW_INFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow > 0) {
             return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
         } else if (CashFlowType.OUTFLOW_INFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow < 0) {
+            return RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
+        } else if (CashFlowType.INFLOW_OUTFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow < 0) {
+            return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
+        } else if (CashFlowType.INFLOW_OUTFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow > 0) {
             return RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
         }
 

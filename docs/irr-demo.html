@@ -103,6 +103,7 @@
                 if (typeof currentRaosIrr === 'number') {
                     updateGraphControls(currentRaosIrr);
                 }
+                highlightRowsWithRaoIrr()
             });
 
             // Update Graph Controls
@@ -113,6 +114,31 @@
             }
 
             let chartInstance = null;
+
+            function highlightRowsWithRaoIrr() {
+                const table = document.getElementById('comparisonTable');
+                const rows = table.querySelectorAll('tbody tr');
+                let raoIrr = null;
+
+                // Find the IRR value for Rao's Method
+                rows.forEach(row => {
+                    const methodCell = row.cells[0];
+                    const irrCell = row.cells[1];
+                    if (methodCell.textContent.trim() === "Rao's Method") {
+                        raoIrr = irrCell.textContent.trim();
+                    }
+                });
+
+                // Highlight rows matching Rao's IRR
+                if (raoIrr !== null) {
+                    rows.forEach(row => {
+                        const irrCell = row.cells[1];
+                        if (irrCell.textContent.trim() === raoIrr) {
+                            row.classList.add('highlight');
+                        }
+                    });
+                }
+            }
 
             function displayNFVNPVChart() {
                 const lowerBoundary = parseFloat($("#lowerBoundary").val());
@@ -207,8 +233,13 @@
                 displayNFVNPVChart();
             });
         });
+
+
     </script>
     <style>
+        .highlight {
+            background-color: yellow;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
