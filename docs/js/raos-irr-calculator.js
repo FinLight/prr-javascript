@@ -1,7 +1,7 @@
 import {analyzeCashFlows, CashFlowType, getNFV, getNPV} from "./cash-flows.js";
 
 export default class RaosIrrCalculator {
-    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 100) {
+    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 1000) {
         const cashFlowResult = analyzeCashFlows(cashFlows);
         if (CashFlowType.NET_ZERO === cashFlowResult.cashFlowType) {
             return 0
@@ -15,31 +15,60 @@ export default class RaosIrrCalculator {
             return Number.NEGATIVE_INFINITY
         }
 
+        let irrByNFV = null
+        let irrByNPV = null
+        let absNfvForIrrByNFV = null
+        let absNpvForIrrByNFV = null
+        let absNfvForIrrByNPV = null
+        let absNpvForIrrByNPV = null
+
         if (CashFlowType.OUTFLOW_INFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow > 0) {
-            return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
+            irrByNPV = RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
         } else if (CashFlowType.OUTFLOW_INFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow < 0) {
-            return RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
+            irrByNFV = RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
         } else if (CashFlowType.INFLOW_OUTFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow < 0) {
-            return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
+            irrByNPV = RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
         } else if (CashFlowType.INFLOW_OUTFLOW === cashFlowResult.cashFlowType && cashFlowResult.netCashFlow > 0) {
-            return RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
+            irrByNFV = RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
         }
 
-        const irrByNFV = RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
-        const irrByNPV = RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
+        if(irrByNFV != null && !Number.isNaN(irrByNFV)) {
+            absNfvForIrrByNFV = Math.abs(getNFV(cashFlows, irrByNFV))
+            absNpvForIrrByNFV = Math.abs(getNPV(cashFlows, irrByNFV))
+            if(absNfvForIrrByNFV < tolerance || absNpvForIrrByNFV < tolerance) {
+                return irrByNFV
+            }
+        }
+
+        if(irrByNPV != null && !Number.isNaN(irrByNPV)) {
+            absNfvForIrrByNPV = Math.abs(getNFV(cashFlows, irrByNPV))
+            absNpvForIrrByNPV = Math.abs(getNPV(cashFlows, irrByNPV))
+            if(absNfvForIrrByNPV < tolerance || absNpvForIrrByNPV < tolerance) {
+                return irrByNPV
+            }
+        }
+
+        if(irrByNFV == null) {
+            irrByNFV = RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows, guess, tolerance, maxIter)
+            absNfvForIrrByNFV = Math.abs(getNFV(cashFlows, irrByNFV))
+            absNpvForIrrByNFV = Math.abs(getNPV(cashFlows, irrByNFV))
+        }
+
+        if(irrByNPV == null) {
+            irrByNPV = RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows, guess, tolerance, maxIter)
+            absNfvForIrrByNPV = Math.abs(getNFV(cashFlows, irrByNPV))
+            absNpvForIrrByNPV = Math.abs(getNPV(cashFlows, irrByNPV))
+        }
+
         if (Number.isNaN(irrByNFV)) {
             return irrByNPV
         }
         if (Number.isNaN(irrByNPV)) {
             return irrByNFV
         }
-        let absNfvForIrrByNFV = Math.abs(getNFV(cashFlows, irrByNFV))
         absNfvForIrrByNFV = Number.isNaN(absNfvForIrrByNFV)? Number.POSITIVE_INFINITY : absNfvForIrrByNFV
-        let absNpvForIrrByNFV = Math.abs(getNPV(cashFlows, irrByNFV))
         absNpvForIrrByNFV = Number.isNaN(absNpvForIrrByNFV)? Number.POSITIVE_INFINITY : absNpvForIrrByNFV
-        let absNfvForIrrByNPV = Math.abs(getNFV(cashFlows, irrByNPV))
         absNfvForIrrByNPV = Number.isNaN(absNfvForIrrByNPV)? Number.POSITIVE_INFINITY : absNfvForIrrByNPV
-        let absNpvForIrrByNPV = Math.abs(getNPV(cashFlows, irrByNPV))
         absNpvForIrrByNPV = Number.isNaN(absNpvForIrrByNPV)? Number.POSITIVE_INFINITY : absNpvForIrrByNPV
 
         if (Math.min(absNfvForIrrByNFV, absNpvForIrrByNFV) < Math.min(absNfvForIrrByNPV, absNpvForIrrByNPV)) {
