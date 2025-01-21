@@ -71,7 +71,7 @@ export default class RaosIrrCalculator {
         absNfvForIrrByNPV = Number.isNaN(absNfvForIrrByNPV)? Number.POSITIVE_INFINITY : absNfvForIrrByNPV
         absNpvForIrrByNPV = Number.isNaN(absNpvForIrrByNPV)? Number.POSITIVE_INFINITY : absNpvForIrrByNPV
 
-        if (Math.min(absNfvForIrrByNFV, absNpvForIrrByNFV) < Math.min(absNfvForIrrByNPV, absNpvForIrrByNPV)) {
+        if ((absNfvForIrrByNFV + absNpvForIrrByNFV) < (absNfvForIrrByNPV + absNpvForIrrByNPV)) {
             return irrByNFV
         }
         return irrByNPV

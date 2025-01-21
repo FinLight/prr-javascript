@@ -1,52 +1,17 @@
-import {getNFV, getNPV} from "./cash-flows.js";
+import RaosIrrCalculator from "./raos-irr-calculator.js";
 
 export class IRRCalculatorNR_NPV {
-    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 1000) {
-        let iter = 0;
-        let rate = guess;
-
-        while (iter < maxIter) {
-            const f = getNPV(cashFlows, rate)
-            const fPrime = cashFlows.reduce((acc, cf, t) => acc - t * cf / Math.pow(1 + rate, t + 1), 0);
-
-            if (Math.abs(fPrime) < tolerance) break; // Avoid division by zero
-
-            const newRate = rate - f / fPrime;
-
-            if (Math.abs(newRate - rate) < tolerance) {
-                return newRate
-            }
-
-            rate = newRate;
-            iter++;
-        }
-        return rate
+    static calculate(cashFlows) {
+        return RaosIrrCalculator.irrNewtonRaphsonNPV(cashFlows)
     }
 }
+
 export class IRRCalculatorNR_NFV {
-    static calculate(cashFlows, guess = 0.1, tolerance = 1e-6, maxIter = 1000) {
-        let iter = 0;
-        let rate = guess;
-        const n = cashFlows.length - 1;
-
-        while (iter < maxIter) {
-            const f = getNFV(cashFlows, rate)
-            const fPrime = cashFlows.reduce((acc, cf, t) => acc + (n - t) * cf * Math.pow(1 + rate, n - t - 1), 0);
-
-            if (Math.abs(fPrime) < tolerance) break; // Avoid division by zero
-
-            const newRate = rate - f / fPrime;
-
-            if (Math.abs(newRate - rate) < tolerance) {
-                return newRate
-            }
-
-            rate = newRate;
-            iter++;
-        }
-        return rate
+    static calculate(cashFlows) {
+        return RaosIrrCalculator.irrNewtonRaphsonNFV(cashFlows)
     }
 }
+
 export class IRRCalculatorBrent {
     static calculate(cashFlows, lower = 0.0, upper = 1.0) {
         const precision = 1e-6;
@@ -87,6 +52,7 @@ export class IRRCalculatorBrent {
         return Number.NaN;
     }
 }
+
 export class IRRCalculatorBisection {
     static calculate(cashFlows, lower = 0.0, upper = 1.0) {
         const precision = 1e-6;
@@ -107,6 +73,7 @@ export class IRRCalculatorBisection {
         return Number.NaN;
     }
 }
+
 export class IRRCalculatorSecant {
     static calculate(cashFlows, x0 = 0.1, x1 = 0.2) {
         const maxIterations = 1000;
