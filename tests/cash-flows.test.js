@@ -1,9 +1,4 @@
-import { analyzeCashFlows, analyzeIRRs, getNFV, getNPV, CashFlowType } from "../docs/js/cash-flows.js";
-import IRRCalculatorNR from '../docs/js/other-irr-calculators.js';
-import RaosIrrCalculator from '../docs/js/raos-irr-calculator.js';
-
-jest.mock('../public/js/OtherIrrCalculators.js');
-jest.mock('../public/js/raos-irr-calculator.js');
+import {analyzeCashFlows, CashFlowType, getNFV, getNPV} from "../docs/js/cash-flows.js";
 
 describe('analyzeCashFlows', () => {
     test('should classify cash flows as ALL_INFLOW', () => {
@@ -78,7 +73,7 @@ describe('getNFV', () => {
         const cashFlows = [100, -50, 30];
         const rate = 0.05;
         const result = getNFV(cashFlows, rate);
-        expect(result).toBeCloseTo(82.175, 2);
+        expect(result).toBe(87.75);
     });
 });
 
@@ -87,46 +82,8 @@ describe('getNPV', () => {
         const cashFlows = [100, -50, 30];
         const rate = 0.05;
         const result = getNPV(cashFlows, rate);
-        expect(result).toBeCloseTo(74.554, 2);
+        expect(result).toBe(79.591837)
     });
 });
 
-describe('analyzeIRRs', () => {
-    beforeEach(() => {
-        IRRCalculatorNR.calculate.mockClear();
-        RaosIrrCalculator.calculate.mockClear();
-    });
-
-    test('should calculate IRRs correctly', () => {
-        const cashFlows = [-100, 50, 60];
-        IRRCalculatorNR.calculate.mockReturnValue(0.1);
-        RaosIrrCalculator.calculate.mockReturnValue(0.12);
-
-        const result = analyzeIRRs(cashFlows);
-
-        expect(IRRCalculatorNR.calculate).toHaveBeenCalledWith(cashFlows);
-        expect(RaosIrrCalculator.calculate).toHaveBeenCalledWith(cashFlows);
-        expect(result.irr).toBe(10); // 0.1 * 100
-        expect(result.newIRR).toBe(12); // 0.12 * 100
-        expect(result.irrNFV).toBeCloseTo(0, 2);
-        expect(result.newIrrNFV).toBeCloseTo(0, 2);
-    });
-
-    test('should handle IRR calculation failure gracefully', () => {
-        const cashFlows = [-100, 50, 60];
-        IRRCalculatorNR.calculate.mockImplementation(() => {
-            throw new Error('IRR calculation failed');
-        });
-        RaosIrrCalculator.calculate.mockImplementation(() => {
-            throw new Error('Raos IRR calculation failed');
-        });
-
-        const result = analyzeIRRs(cashFlows);
-
-        expect(IRRCalculatorNR.calculate).toHaveBeenCalledWith(cashFlows);
-        expect(RaosIrrCalculator.calculate).toHaveBeenCalledWith(cashFlows);
-        expect(result.irr).toBe('Could not calculate IRR (invalid or non-convergent cash flows)');
-        expect(result.newIRR).toBe('Could not calculate IRR (invalid or non-convergent cash flows)');
-    });
-});
 

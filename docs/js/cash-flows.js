@@ -8,24 +8,26 @@ export const CashFlowType = Object.freeze({
     ZIGZAG: "ZIGZAG"
 });
 
-export const getNFV = (cashFlows, rate) => {
+export const getNFV = (cashFlows, rate, precision=6) => {
     const n = cashFlows.length - 1;
-    return cashFlows.reduce((acc, cf, t) => acc + cf * Math.pow(1 + rate, n - t), 0);
+    const nfv = cashFlows.reduce((acc, cf, t) => acc + cf * Math.pow(1 + rate, n - t), 0);
+    return parseFloat(nfv.toFixed(precision))
 };
 
-export const getNPV = (cashFlows, rate) => {
-    return cashFlows.reduce((acc, cf, t) => acc + cf / Math.pow(1 + rate, t), 0);
+export const getNPV = (cashFlows, rate, precision = 6) => {
+    const npv = cashFlows.reduce((acc, cf, t) => acc + cf / Math.pow(1 + rate, t), 0);
+    return parseFloat(npv.toFixed(precision))
 };
 
 // Main function to analyze cash flows
-export const analyzeCashFlows = (cashFlows) => {
+export const analyzeCashFlows = (cashFlows, precision = 6) => {
     if (!Array.isArray(cashFlows) || cashFlows.length === 0) {
         throw new Error("Invalid cash flow input: Must be an array.");
     }
 
-    let positiveCashFlow = 0;
-    let negativeCashFlow = 0;
-    let transitions = 0;
+    let positiveCashFlow = 0.0;
+    let negativeCashFlow = 0.0;
+    let transitions = 0.0;
 
     for (let i = 0; i < cashFlows.length; i++) {
         const cf = cashFlows[i];
@@ -48,8 +50,10 @@ export const analyzeCashFlows = (cashFlows) => {
             transitions++;
         }
     }
-
+    positiveCashFlow = parseFloat(positiveCashFlow.toFixed(precision))
+    negativeCashFlow = parseFloat(negativeCashFlow.toFixed(precision))
     let netCashFlow = positiveCashFlow + negativeCashFlow;
+    netCashFlow = parseFloat(netCashFlow.toFixed(precision))
 
     let cashFlowType = CashFlowType.ZIGZAG
     // Classification based on conditions

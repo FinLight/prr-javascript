@@ -37,20 +37,20 @@ describe('RandomCashFlow', () => {
         });
 
         test('should throw an error if options are invalid', () => {
-            // Invalid count: Less than 2
+            // Invalid count: Less than
             expect(() => {
-                instance.generateRandomCashFlows({ count: 1 });
-            }).toThrow('Invalid "count": It must be an integer greater than or equal to 2.');
+                instance.generateRandomCashFlows({ count: 0 });
+            }).toThrow('Invalid "count": It must be an integer greater than or equal to 1.');
 
             // Invalid count: Non-integer
             expect(() => {
                 instance.generateRandomCashFlows({ count: 2.5 });
-            }).toThrow('Invalid "count": It must be an integer greater than or equal to 2.');
+            }).toThrow('Invalid "count": It must be an integer greater than or equal to 1.');
 
             // Invalid count: Not a number
             expect(() => {
                 instance.generateRandomCashFlows({ count: 'five' });
-            }).toThrow('Invalid "count": It must be an integer greater than or equal to 2.');
+            }).toThrow('Invalid "count": It must be an integer greater than or equal to 1.');
 
             // Invalid minAmount: Not a number
             expect(() => {
@@ -226,7 +226,6 @@ describe('RandomCashFlow', () => {
                 maxAmount: 1000
             });
             const cashFlows = instance.getCashFlows();
-            console.log(cashFlows)
             const analysis = analyzeCashFlows(cashFlows);
             expect(analysis.netCashFlow).toBe(0)
             expect(analysis.cashFlowType).toBe(CashFlowType.NET_ZERO);

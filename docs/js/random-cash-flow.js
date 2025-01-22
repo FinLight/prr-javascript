@@ -171,7 +171,7 @@ export default class RandomCashFlow {
         }
 
         // Calculate the current net cash flow
-        const currentNet = this.cashFlows.reduce((sum, flow) => sum + flow, 0);
+        const currentNet = this.cashFlows.reduce((sum, flow) => sum + flow, 0).toFixed(this.precision);
         let lastCashFlowAdjustment = 0;
 
         // Determine the adjustment based on the target
@@ -195,7 +195,6 @@ export default class RandomCashFlow {
             default:
                 throw new Error('Invalid target specified. Use "ZERO", "POSITIVE", or "NEGATIVE".');
         }
-
         // Apply the adjustment to the last cash flow and ensure precision
         this.cashFlows[this.cashFlows.length - 1] = Number(
             (this.cashFlows[this.cashFlows.length - 1] + lastCashFlowAdjustment).toFixed(this.precision)
