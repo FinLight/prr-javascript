@@ -66,7 +66,7 @@
 
             // Analyze IRR and Display NFV/NPV Graph
             $("#analyzeButton").click(function () {
-                const cashFlows = $("#cashFlowsOutput").val()
+                const cashFlows = $("#cashFlowsOutput").val().replaceAll('−','-')
                     .split(",")
                     .map(value => parseFloat(value.trim()));
 

@@ -17,41 +17,58 @@ export class IRRCalculatorBrent {
         const precision = 1e-6;
         const maxIterations = 1000;
 
-        let a = lower, b = upper, fa, fb;
-        fa = cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + a, t), 0);
-        fb = cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + b, t), 0);
+        let a = lower, b = upper;
+        let fa = this.netPresentValue(cashFlows, a);
+        let fb = this.netPresentValue(cashFlows, b);
 
-        if (fa * fb > 0) return Number.NaN;
+        if (fa * fb > 0) {
+            throw new Error("Root is not bracketed within the specified bounds.");
+        }
 
         let c = a, fc = fa, s, fs;
 
         for (let i = 0; i < maxIterations; i++) {
             if (fa !== fc && fb !== fc) {
+                // Use inverse quadratic interpolation
                 s = (a * fb * fc) / ((fa - fb) * (fa - fc)) +
                     (b * fa * fc) / ((fb - fa) * (fb - fc)) +
                     (c * fa * fb) / ((fc - fa) * (fc - fb));
             } else {
+                // Use secant method
                 s = b - fb * (b - a) / (fb - fa);
             }
 
-            if (!((s > (3 * a + b) / 4 && s < b) || Math.abs(s - b) < precision)) {
+            // Ensure s is within bounds or fallback to bisection
+            if (!(s > (3 * a + b) / 4 && s < b) || Math.abs(s - b) < precision) {
                 s = (a + b) / 2;
             }
 
-            fs = cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + s, t), 0);
+            fs = this.netPresentValue(cashFlows, s);
 
             c = b;
             fc = fb;
-            if (fa * fs < 0) b = s;
-            else a = s;
+            if (fa * fs < 0) {
+                b = s;
+                fb = fs;
+            } else {
+                a = s;
+                fa = fs;
+            }
 
-            fb = cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + b, t), 0);
-            if (Math.abs(fb) < precision) return b;
+            // Check convergence
+            if (Math.abs(fs) < precision || Math.abs(b - a) < precision) {
+                return s;
+            }
         }
 
-        return Number.NaN;
+        throw new Error("Failed to converge to a solution within the maximum iterations.");
+    }
+
+    static netPresentValue(cashFlows, rate) {
+        return cashFlows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + rate, t), 0);
     }
 }
+
 
 export class IRRCalculatorBisection {
     static calculate(cashFlows, lower = 0.0, upper = 1.0) {
