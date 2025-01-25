@@ -87,10 +87,10 @@
 
                     row.innerHTML = `
                     <td>${result.method}</td>
-                    <td>${typeof result.irr === 'number' ? result.irr.toFixed(2) : result.irr}</td>
-                    <td>${result.timeTaken.toFixed(2)}</td>
-                    <td>${result.irrNFV !== null ? result.irrNFV.toFixed(2) : 'N/A'}</td>
-                    <td>${result.irrNPV !== null ? result.irrNPV.toFixed(2) : 'N/A'}</td>
+                    <td>${typeof result.irr === 'number' ? result.irr : result.irr}</td>
+                    <td>${result.timeTaken.toFixed(4)}</td>
+                    <td>${result.irrNFV !== null ? result.irrNFV.toFixed(6) : 'N/A'}</td>
+                    <td>${result.irrNPV !== null ? result.irrNPV.toFixed(6) : 'N/A'}</td>
                     `;
 
                     if (result.method === 'Rao\'s Method') {

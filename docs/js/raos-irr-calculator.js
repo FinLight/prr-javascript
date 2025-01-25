@@ -1,7 +1,7 @@
 import {analyzeCashFlows, CashFlowType, getNFV, getNPV} from "./cash-flows.js";
 
 export default class RaosIrrCalculator {
-    static calculate(cashFlows, guess = null, tolerance = 1e-6, maxIter = 1000) {
+    static calculate(cashFlows, guess = null, tolerance = 1e-15, maxIter = 1000) {
         const cashFlowResult = analyzeCashFlows(cashFlows);
         if (CashFlowType.NET_ZERO === cashFlowResult.cashFlowType) {
             return 0
@@ -80,7 +80,7 @@ export default class RaosIrrCalculator {
     /**
      * IRR calculation using Newton-Raphson Method (based on NPV)
      */
-    static irrNewtonRaphsonNPV(cashFlows, guess = null, tolerance = 1e-6, maxIter = 1000) {
+    static irrNewtonRaphsonNPV(cashFlows, guess = null, tolerance = 1e-15, maxIter = 1000) {
         if (guess === null) {
             guess = this.getCentroid(cashFlows);
         }
@@ -111,7 +111,7 @@ export default class RaosIrrCalculator {
     /**
      * IRR calculation using Newton-Raphson Method (based on NFV)
      */
-    static irrNewtonRaphsonNFV(cashFlows, guess = null, tolerance = 1e-6, maxIter = 1000) {
+    static irrNewtonRaphsonNFV(cashFlows, guess = null, tolerance = 1e-15, maxIter = 1000) {
         if (guess === null) {
             guess = this.getCentroid(cashFlows);
         }
