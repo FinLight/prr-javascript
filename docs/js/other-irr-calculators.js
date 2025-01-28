@@ -22,7 +22,8 @@ export class IRRCalculatorBrent {
         let fb = this.netPresentValue(cashFlows, b);
 
         if (fa * fb > 0) {
-            throw new Error("Root is not bracketed within the specified bounds.");
+            console.log("Root is not bracketed within the specified bounds.");
+            return Number.NaN
         }
 
         let c = a, fc = fa, s, fs;
@@ -61,7 +62,8 @@ export class IRRCalculatorBrent {
             }
         }
 
-        throw new Error("Failed to converge to a solution within the maximum iterations.");
+        console.log("Failed to converge to a solution within the maximum iterations.");
+        return Number.NaN
     }
 
     static netPresentValue(cashFlows, rate) {
